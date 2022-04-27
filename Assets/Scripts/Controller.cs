@@ -11,22 +11,58 @@ public class Controller : MonoBehaviour
     private Vector3Int playerCellPos;
 
     private bool playerShouldMove;
+    private bool playerIsMoving;
+    private Vector3Int playerIsMovingTo;
+    private Vector3Int playerMovement;
     private List<Vector3Int> movementQueue;
+
+    private float movementCompletion;
 
     private void Start()
     {
         playerPosOffset = new Vector2(0, (float)0.5);
 
         Vector3Int startingPosition = new Vector3Int(0, 0, 0);
+        playerIsMovingTo = new Vector3Int(0, 0, 0);
         TeleportPlayerTo(startingPosition);
 
+        movementQueue = new List<Vector3Int>();
         playerShouldMove = false;
+        playerIsMoving = false;
+
+        movementCompletion = 0;
     }
 
     private void Update()
     {
-            if (Input.GetKeyDown(KeyCode.Mouse0)) HandlePrimaryTouch();
+        if (Input.GetKeyDown(KeyCode.Mouse0)) HandlePrimaryTouch(Input.mousePosition);
 
+        if (playerIsMoving)
+        {
+            movementCompletion += Time.deltaTime * 2;
+
+            if (movementCompletion >= 1) movementCompletion = 1;
+            ProgressPlayerMovement();
+        }
+
+        if (playerShouldMove && !playerIsMoving)
+        {
+            if (movementQueue.Count > 0)
+            {
+                playerMovement = movementQueue[0];
+                playerIsMovingTo = new Vector3Int(playerCellPos.x + playerMovement.x, playerCellPos.y + playerMovement.y, playerCellPos.z);
+
+                playerIsMoving = true;
+
+                if (movementQueue.Count == 1) playerShouldMove = false;
+
+                movementQueue.RemoveAt(0);
+            }
+            else
+            {
+                Debug.LogError("Player should move, but there's no queued movement.");
+            }
+        }
     }
 
     private void TeleportPlayerTo(Vector3Int destination)
@@ -39,15 +75,20 @@ public class Controller : MonoBehaviour
         playerCellPos = destination;
     }
 
+    private void TeleportPlayerTo(Vector3 destination)
+    {
+        Vector3 correctDestination = ReturnCorrectPlayerPosition(destination);
+
+        player.transform.position = correctDestination;
+    }
+
     private Vector3 ReturnCorrectPlayerPosition(Vector3 position)
     {
         return new Vector3(position.x + playerPosOffset.x, position.y + playerPosOffset.y, position.z);
     }
 
-    private void HandlePrimaryTouch()
+    private void HandlePrimaryTouch(Vector2 touchPos)
     {
-        Vector2 touchPos = Input.mousePosition;
-
         if (!playerShouldMove)
         {
             Vector3Int touchedCell = ReturnCellFromTouchPos(touchPos);
@@ -161,6 +202,26 @@ public class Controller : MonoBehaviour
             {
                 movementQueue.Add(new Vector3Int(0, -1, 0));
             }
+        }
+    }
+
+    private void ProgressPlayerMovement()
+    {
+        Vector3 localOrigin = gridLayout.CellToLocal(playerCellPos);
+        Vector3 localDestination = gridLayout.CellToLocal(playerIsMovingTo);
+
+        Vector3 progress = new Vector3((localDestination.x - localOrigin.x) * movementCompletion, (localDestination.y - localOrigin.y) * movementCompletion, localOrigin.z);
+        Vector3 newPos = new Vector3(localOrigin.x + progress.x, localOrigin.y + progress.y, localOrigin.z);
+
+
+        TeleportPlayerTo(newPos);
+
+        if (movementCompletion == 1)
+        {
+            playerCellPos = playerIsMovingTo;
+            playerIsMoving = false;
+            movementCompletion = 0;
+
         }
     }
 }
