@@ -4,13 +4,12 @@ using UnityEngine;
 
 public class Character : MonoBehaviour
 {
-    // Start is called before the first frame update
     void Start()
     {
-        
+        GridLayout gridLayout = GetComponentInParent<GridLayout>();
+        Debug.Log($"Cell Gap (from character) : {gridLayout.cellGap.y}");
     }
 
-    // Update is called once per frame
     void Update()
     {
         
