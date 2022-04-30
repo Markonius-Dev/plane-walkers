@@ -61,7 +61,7 @@ public class GridController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0)) DebugLogCell(Input.mousePosition);
+        // if (Input.GetKeyDown(KeyCode.Mouse0)) DebugLogCell(Input.mousePosition);
 
     }
 
