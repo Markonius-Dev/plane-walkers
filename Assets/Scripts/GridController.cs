@@ -6,43 +6,57 @@ public class GridController : MonoBehaviour
 {
     private GridLayout gridLayout;
     [SerializeField] private GameObject grid;
-    private List<GameObject> entities;
-
+    
+    private List<Entity> entities;
+    private List<Rectangle> rectangles;
     private List<Vector3Int> cells;
+    private List<Vector3Int> occupiedCells;
+
+    public class Rectangle
+    {
+        public Vector3Int origin;
+        public Vector2Int size;
+
+        public Rectangle(Vector3Int origin, Vector2Int size)
+        {
+            this.origin = origin;
+            this.size = size;
+        }
+    }
+
+    public class Entity
+    {
+        public GameObject gameObject;
+        public Vector3Int position;
+        public int size;
+
+        public Entity(GameObject gameObject, Vector3Int position, int size = 1)
+        {
+            this.gameObject = gameObject;
+            this.position = position;
+            this.size = size;
+        }
+    }
 
     void Start()
     {
         gridLayout = GetComponent<GridLayout>();
         Debug.Log($"Cell Gap : {gridLayout.cellGap.y}");
 
-        entities = new List<GameObject>(0);
+        entities = new List<Entity>();
 
-        GameObject character = Instantiate(Resources.Load<GameObject>("Prefabs/Character"));
-        character.name = "Character";
-        character.transform.parent = transform;
+        Entity character = new Entity(Instantiate(Resources.Load<GameObject>("Prefabs/Character")), new Vector3Int(0, 0, 0));
+
+        character.gameObject.name = "Character";
+        character.gameObject.transform.parent = transform;
         entities.Add(character);
 
+        rectangles = new List<Rectangle>();
         cells = new List<Vector3Int>();
 
-        cells.Add(new Vector3Int(0, 0, 0));
-        cells.Add(new Vector3Int(1, 0, 0));
-        cells.Add(new Vector3Int(-1, 0, 0));
-        cells.Add(new Vector3Int(-2, 0, 0));
-        cells.Add(new Vector3Int(0, 1, 0));
-        cells.Add(new Vector3Int(1, 1, 0));
-        cells.Add(new Vector3Int(-1, 1, 0));
-        cells.Add(new Vector3Int(-2, 1, 0));
-        cells.Add(new Vector3Int(0, -1, 0));
-        cells.Add(new Vector3Int(1, -1, 0));
-        cells.Add(new Vector3Int(-1, -1, 0));
-        cells.Add(new Vector3Int(-2, -1, 0));
-        cells.Add(new Vector3Int(0, -2, 0));
-        cells.Add(new Vector3Int(1, -2, 0));
-        cells.Add(new Vector3Int(-1, -2, 0));
-        cells.Add(new Vector3Int(-2, -2, 0));
+        rectangles.Add(new Rectangle(new Vector3Int(-2, -2, 0), new Vector2Int(3, 3)));
 
     }
-
 
     void Update()
     {
@@ -60,6 +74,25 @@ public class GridController : MonoBehaviour
 
     private bool ReturnCellExists(Vector3Int cell)
     {
-        return cells.Exists(el => (el.x == cell.x && el.y == cell.y));
+        if (rectangles.Count > 0)
+        {
+            foreach (Rectangle rectangle in rectangles )
+            {
+                if (cell.x >= rectangle.origin.x && cell.y >= rectangle.origin.y)
+                {
+                    if (cell.x <= rectangle.origin.x + rectangle.size.x && cell.y <= rectangle.origin.y + rectangle.size.y) return true;
+                }
+            }
+        }
+
+        if (cells.Count > 0)
+        {
+            foreach (Vector3Int cellToCheck in cells)
+            {
+                if (cell.x == cellToCheck.x && cell.y == cellToCheck.y) return true;
+            }
+        }
+
+        return false;
     }
 }
