@@ -62,6 +62,24 @@ public class GridController : MonoBehaviour
     void Update()
     {
         // if (Input.GetKeyDown(KeyCode.Mouse0)) DebugLogCell(Input.mousePosition);
+        if (Input.GetKeyDown(KeyCode.Mouse0)) Debug.Log($"Mouse 0 was struck");
+        if (Input.GetKeyDown(KeyCode.Mouse1)) Debug.Log($"Mouse 1 was struck");
+
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            Vector2 worldTouchPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+            GameObject touchObject = Instantiate(Resources.Load<GameObject>("Prefabs/TouchCollider"));
+            touchObject.transform.parent = transform;
+            touchObject.transform.name = "Instantiated Touch Collider";
+            touchObject.transform.position = new Vector3(worldTouchPos.x, worldTouchPos.y, 0);
+
+            Collider2D touchCollider = touchObject.GetComponent<Collider2D>();
+
+            if (touchCollider.IsTouching(entities[0].gameObject.GetComponent<Collider2D>())) Debug.Log($"Successfully clicked the Character with left click");
+
+            Destroy(touchObject);
+        }
 
     }
 
