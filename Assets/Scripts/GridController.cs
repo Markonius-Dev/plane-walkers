@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class GridController : MonoBehaviour
 {
@@ -61,6 +62,12 @@ public class GridController : MonoBehaviour
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Mouse0)) DebugLogCell(Input.mousePosition);
+
+    }
+
+    void OnMouseDown()
+    {
+        if (!EventSystem.current.IsPointerOverGameObject()) Debug.Log($"The Grid was hit wih On Mouse Down");
     }
 
     private void DebugLogCell(Vector2 touchPos)
