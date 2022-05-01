@@ -40,6 +40,7 @@ public class FirstIsland : MonoBehaviour
 
     private GridLayout gridLayout;
 
+    [SerializeField] private GameObject cameraGameObject;
     private List<Entity> entities;
     private int framesPerMovement;
 
@@ -67,6 +68,8 @@ public class FirstIsland : MonoBehaviour
             character.gameObject.transform.parent = transform;
             character.gameObject.transform.name = "Character";
 
+            cameraGameObject.transform.parent = character.gameObject.transform;
+
             character.movementQueue.Add(5);
             character.movementQueue.Add(5);
             character.movementQueue.Add(6);
@@ -74,6 +77,16 @@ public class FirstIsland : MonoBehaviour
 
             if (entities.Count == 0) entities.Add(character);
             else entities[0] = character;
+
+            Entity craftingStation = new Entity();
+
+            craftingStation.gameObject = Instantiate(Resources.Load<GameObject>("Prefabs/CraftingStation"));
+
+            craftingStation.gameObject.transform.parent = transform;
+            craftingStation.gameObject.transform.name = "CraftingStation";
+
+            entities.Add(craftingStation);
+            TeleportEntity((entities.Count - 1), new Vector3Int(2, 1, 0));
         }
     }
 
@@ -188,6 +201,17 @@ public class FirstIsland : MonoBehaviour
         {
             Debug.LogError($"There was an error while calculating movement progression for {entity.gameObject.transform.name}");
         }
+    }
+
+    private void TeleportEntity(int index, Vector3Int cell)
+    {
+        Entity entity = entities[index];
+
+        Vector3 worldDestination = gridLayout.CellToWorld(cell);
+        worldDestination.z = worldDestination.y / 100;
+
+        entities[index].gameObject.transform.position = worldDestination;
+        entities[index].position = cell;
     }
 
     private bool ReturnCellExists(Vector3Int cell)
