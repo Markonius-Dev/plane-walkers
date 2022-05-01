@@ -6,6 +6,8 @@ public class FirstIsland : MonoBehaviour
 {
     // Script managing First Island map.
 
+    private GridLayout gridLayout;
+
     private List<Entity> entities;
 
     private void Start()
@@ -16,6 +18,8 @@ public class FirstIsland : MonoBehaviour
 
         void SpawnCharacter()
         {
+            gridLayout = GetComponent<GridLayout>();
+
             Debug.Log($"Loading Character");
             Entity character = new Entity();
 
@@ -45,7 +49,7 @@ public class FirstIsland : MonoBehaviour
             gameObject = null;
             position = new Vector3Int(0, 0, 0);
             moving = false;
-            direction = 7;
+            direction = 2;
             movementDelta = 0;
             movementQueue = new List<int>();
         }
