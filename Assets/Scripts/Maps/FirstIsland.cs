@@ -26,15 +26,32 @@ public class FirstIsland : MonoBehaviour
         }
     }
 
+    public struct Rectangle
+    {
+        public Vector3Int origin;
+        public Vector2Int size;
+
+        public Rectangle(Vector3Int origin, Vector2Int size)
+        {
+            this.origin = origin;
+            this.size = size;
+        }
+    }
+
     private GridLayout gridLayout;
 
     private List<Entity> entities;
     private int framesPerMovement;
 
+    private List<Rectangle> rectangles;
+
     private void Start()
     {
         entities = new List<Entity>();
         framesPerMovement = 30;
+
+        rectangles = new List<Rectangle>();
+        rectangles.Add(new Rectangle(new Vector3Int(-3, -4, 0), new Vector2Int(5, 7)));
 
         SpawnCharacter();
 
@@ -123,6 +140,15 @@ public class FirstIsland : MonoBehaviour
         }
 
         Vector3Int cellDestination = new Vector3Int(entity.position.x + direction.x, entity.position.y + direction.y, 0);
+
+        if (!ReturnCellExists(cellDestination) || ReturnCellIsOccupied(cellDestination))
+        {
+            Debug.LogError($"{entities[index].gameObject.name} tried to move at {cellDestination} but couldn't");
+            entity.moving = false;
+            entity.movementDelta = 0;
+            entity.movementQueue.Clear();
+        }
+
         Vector3 worldDestination = gridLayout.CellToWorld(cellDestination);
 
         Vector3 worldPositionDelta = new Vector3(worldDestination.x - worldOrigin.x, worldDestination.y - worldOrigin.y, 0);
@@ -162,6 +188,35 @@ public class FirstIsland : MonoBehaviour
         {
             Debug.LogError($"There was an error while calculating movement progression for {entity.gameObject.transform.name}");
         }
+    }
+
+    private bool ReturnCellExists(Vector3Int cell)
+    {
+        if (rectangles.Count > 0)
+        {
+            foreach (Rectangle rectangle in rectangles)
+            {
+                if (cell.x >= rectangle.origin.x && cell.y >= rectangle.origin.y)
+                {
+                    if (cell.x <= (rectangle.origin.x + rectangle.size.x) && cell.y <= (rectangle.origin.y + rectangle.size.y)) return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private bool ReturnCellIsOccupied(Vector3Int cell)
+    {
+        if (entities.Count > 0)
+        {
+            foreach (Entity entity in entities)
+            {
+                if (entity.position.x == cell.x && entity.position.y == cell.y) return true;
+            }
+        }
+
+        return false;
     }
 
     public void DebugOnClickButton()
