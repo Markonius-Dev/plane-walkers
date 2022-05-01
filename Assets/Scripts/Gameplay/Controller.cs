@@ -16,7 +16,7 @@ public class Controller : MonoBehaviour
     {
         data = new Data();
 
-        LoadScene(data.currentScene);    
+        LoadScene(data.currentScene);  
     }
 
     private void LoadScene(string scene)
