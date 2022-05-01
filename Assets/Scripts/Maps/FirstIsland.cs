@@ -34,7 +34,7 @@ public class FirstIsland : MonoBehaviour
     private void Start()
     {
         entities = new List<Entity>();
-        framesPerMovement = 60;
+        framesPerMovement = 30;
 
         SpawnCharacter();
 
@@ -50,7 +50,10 @@ public class FirstIsland : MonoBehaviour
             character.gameObject.transform.parent = transform;
             character.gameObject.transform.name = "Character";
 
-
+            character.movementQueue.Add(5);
+            character.movementQueue.Add(5);
+            character.movementQueue.Add(6);
+            character.movementQueue.Add(2);
 
             if (entities.Count == 0) entities.Add(character);
             else entities[0] = character;
