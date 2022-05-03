@@ -42,7 +42,7 @@ public class FirstIsland : MonoBehaviour
 
     private GridLayout gridLayout;
 
-    [SerializeField] private GameObject cameraGameObject;
+    //[SerializeField] private GameObject cameraGameObject;
     private List<Entity> entities;
     private int framesPerMovement;
 
@@ -51,7 +51,7 @@ public class FirstIsland : MonoBehaviour
     private void Start()
     {
         entities = new List<Entity>();
-        framesPerMovement = 30;
+        framesPerMovement = 10;
 
         rectangles = new List<Rectangle>();
         rectangles.Add(new Rectangle(new Vector3Int(-3, -4, 0), new Vector2Int(5, 7)));
@@ -70,7 +70,7 @@ public class FirstIsland : MonoBehaviour
             character.gameObject.transform.parent = transform;
             character.gameObject.transform.name = "Character";
 
-            cameraGameObject.transform.parent = character.gameObject.transform;
+            //cameraGameObject.transform.parent = character.gameObject.transform;
 
             if (entities.Count == 0) entities.Add(character);
             else entities[0] = character;
@@ -163,6 +163,7 @@ public class FirstIsland : MonoBehaviour
             entity.moving = false;
             entity.movementDelta = 0;
             entity.movementQueue.Clear();
+            TeleportEntity(index, entities[index].position);
         }
 
         Vector3 worldDestination = gridLayout.CellToWorld(cellDestination);
