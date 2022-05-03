@@ -1,6 +1,8 @@
 using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class FirstIsland : MonoBehaviour
 {
@@ -70,11 +72,6 @@ public class FirstIsland : MonoBehaviour
 
             cameraGameObject.transform.parent = character.gameObject.transform;
 
-            character.movementQueue.Add(5);
-            character.movementQueue.Add(5);
-            character.movementQueue.Add(6);
-            character.movementQueue.Add(2);
-
             if (entities.Count == 0) entities.Add(character);
             else entities[0] = character;
 
@@ -93,6 +90,14 @@ public class FirstIsland : MonoBehaviour
     private void Update()
     {
         CheckEntitiesRequiringMovement();
+
+        if (!EventSystem.current.IsPointerOverGameObject())
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                PrimaryButtonOnScreen(Input.mousePosition);
+            }
+        }
     }
 
     private void CheckEntitiesRequiringMovement()
@@ -102,7 +107,6 @@ public class FirstIsland : MonoBehaviour
             int index = 0;
             foreach (Entity entity in entities)
             {
-                if (entity.moving) Debug.Log($"Character should move");
                 if (entity.moving) MoveEntity(index);
                 index++;
             }
@@ -111,7 +115,6 @@ public class FirstIsland : MonoBehaviour
 
     private void MoveEntity(int index)
     {
-        Debug.Log($"Moving character");
         Entity entity = entities[index];
         Vector3 worldOrigin = gridLayout.CellToWorld(entity.position);
 
@@ -154,7 +157,7 @@ public class FirstIsland : MonoBehaviour
 
         Vector3Int cellDestination = new Vector3Int(entity.position.x + direction.x, entity.position.y + direction.y, 0);
 
-        if (!ReturnCellExists(cellDestination) || ReturnCellIsOccupied(cellDestination))
+        if (!ReturnCellIsAvailable(cellDestination))
         {
             Debug.LogError($"{entities[index].gameObject.name} tried to move at {cellDestination} but couldn't");
             entity.moving = false;
@@ -173,7 +176,6 @@ public class FirstIsland : MonoBehaviour
         if (entity.movementDelta >= framesPerMovement) movementProgress = 1;
 
         else movementProgress = entity.movementDelta / framesPerMovement;
-        Debug.Log($"movementProgress : {movementProgress}");
 
         if (movementProgress == 1)
         {
@@ -243,10 +245,139 @@ public class FirstIsland : MonoBehaviour
         return false;
     }
 
+    private bool ReturnCellIsAvailable(Vector3Int cell)
+    {
+        if (ReturnCellExists(cell) && !ReturnCellIsOccupied(cell)) return true;
+
+        return false;
+    }
+
+    private void GenerateMovementQueue(int index, Vector3Int cellDestination)
+    {
+        Entity entity = entities[index];
+        entities[index].movementQueue.Clear();
+        Debug.Log($"Moving from {entity.position} to {cellDestination}");
+
+        Vector3Int path = new Vector3Int((cellDestination.x - entity.position.x), (cellDestination.y - entity.position.y), entity.position.z);
+        Debug.Log($"Path : {path}");
+
+        int diagonalMovements = Math.Min(Math.Abs(path.x), Math.Abs(path.y));
+        Debug.Log($"Diagonal movements : {diagonalMovements}");
+        int direction = -1;
+
+        if (diagonalMovements > 0)
+        {
+            if (path.x > 0)
+            {
+                path.x -= diagonalMovements;
+                if (path.y > 0)
+                {
+                    path.y -= diagonalMovements;
+                    direction = 1;
+                }
+                else //path.y < 0
+                {
+                    path.y += diagonalMovements;
+                    direction = 2;
+                }
+            }
+            else //path.x < 0
+            {
+                path.x += diagonalMovements;
+                if (path.y < 0)
+                {
+                    path.y += diagonalMovements;
+                    direction = 3;
+                }
+                else //path.y > 0
+                {
+                    path.y -= diagonalMovements;
+                    direction = 4;
+                }
+            }
+        }
+
+        Debug.Log($"Path : {path}");
+
+        for (int i = 0; i < diagonalMovements; i++)
+        {
+            entities[index].movementQueue.Add(direction);
+        }
+
+        DebugLogCharacterMovementQueue();
+        Debug.Log($"Calculating rest");
+
+        if (path.y > 0)
+        {
+            for (int i = 0; i < path.y; i++)
+            {
+                entities[index].movementQueue.Add(5);
+            }
+            path.y = 0;
+        }
+
+        if (path.x > 0)
+        {
+            for (int i = 0; i < path.x; i++)
+            {
+                entities[index].movementQueue.Add(6);
+            }
+            path.x = 0;
+        }
+
+        if (path.y < 0)
+        {
+            for (int i = 0; i < Math.Abs(path.y); i++)
+            {
+                entities[index].movementQueue.Add(7);
+            }
+            path.y = 0;
+        }
+
+        if (path.x < 0)
+        {
+            for (int i = 0; i < Math.Abs(path.x); i++)
+            {
+                entities[index].movementQueue.Add(8);
+            }
+            path.x = 0;
+        }
+
+        DebugLogCharacterMovementQueue();
+
+        if (entities[index].movementQueue.Count > 0)
+        {
+            entities[index].direction = entities[0].movementQueue[0];
+            entities[0].movementQueue.RemoveAt(0);
+            entities[0].moving = true;
+        }
+    }
+
+    private void PrimaryButtonOnScreen(Vector2 touchPosition)
+    {
+        Entity entity = entities[0];
+
+        if (entity.moving == false)
+        {
+            Vector3Int cellTouchedPosition = gridLayout.WorldToCell(Camera.main.ScreenToWorldPoint(touchPosition));
+            Debug.Log($"Touched cell : {cellTouchedPosition}");
+            
+            if (ReturnCellIsAvailable(cellTouchedPosition))
+            {
+                GenerateMovementQueue(0, cellTouchedPosition);
+            }
+        }
+    }
+
     public void DebugOnClickButton()
     {
         entities[0].moving = true;
         entities[0].movementDelta = 0;
         entities[0].direction = 2;
+    }
+
+    public void DebugLogCharacterMovementQueue()
+    {
+        for (int i = 0; i < entities[0].movementQueue.Count; i++) Debug.Log($"Movement [{i + 1}] = {entities[0].movementQueue[i]}");
     }
 }
