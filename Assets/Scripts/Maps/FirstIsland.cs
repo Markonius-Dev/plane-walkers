@@ -42,7 +42,7 @@ public class FirstIsland : MonoBehaviour
 
     private GridLayout gridLayout;
 
-    //[SerializeField] private GameObject cameraGameObject;
+    [SerializeField] private GameObject cameraGameObject;
     private List<Entity> entities;
     private int framesPerMovement;
 
@@ -70,7 +70,7 @@ public class FirstIsland : MonoBehaviour
             character.gameObject.transform.parent = transform;
             character.gameObject.transform.name = "Character";
 
-            //cameraGameObject.transform.parent = character.gameObject.transform;
+            cameraGameObject.transform.parent = character.gameObject.transform;
 
             if (entities.Count == 0) entities.Add(character);
             else entities[0] = character;
@@ -360,7 +360,8 @@ public class FirstIsland : MonoBehaviour
 
         if (entity.moving == false)
         {
-            Vector3Int cellTouchedPosition = gridLayout.WorldToCell(Camera.main.ScreenToWorldPoint(touchPosition));
+            Vector3 worldPoint = Camera.main.ScreenToWorldPoint(touchPosition);
+            Vector3Int cellTouchedPosition = gridLayout.WorldToCell(new Vector3((worldPoint.x + entity.gameObject.transform.position.x), (worldPoint.y + entity.gameObject.transform.position.y), -10));
             Debug.Log($"Touched cell : {cellTouchedPosition}");
             
             if (ReturnCellIsAvailable(cellTouchedPosition))
